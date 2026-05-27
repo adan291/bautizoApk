@@ -107,6 +107,7 @@ fun GalleryApp(viewModel: GalleryViewModel = viewModel()) {
 
     val context = LocalContext.current
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
+    var pendingCameraLaunch by remember { mutableStateOf(false) }
 
     val pickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         if (uris.isNotEmpty()) {
@@ -121,6 +122,16 @@ fun GalleryApp(viewModel: GalleryViewModel = viewModel()) {
                 Toast.makeText(context, context.getString(R.string.background_uploading), Toast.LENGTH_SHORT).show()
                 viewModel.uploadPhotos(listOf(it)) 
             }
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted && pendingCameraLaunch) {
+            pendingCameraLaunch = false
+            val tempFile = File(context.cacheDir, "camera_${System.currentTimeMillis()}.jpg")
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", tempFile)
+            cameraUri = uri
+            cameraLauncher.launch(uri)
         }
     }
 
@@ -148,10 +159,16 @@ fun GalleryApp(viewModel: GalleryViewModel = viewModel()) {
     }
 
     fun launchCamera() {
-        val tempFile = File(context.cacheDir, "camera_${System.currentTimeMillis()}.jpg")
-        val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", tempFile)
-        cameraUri = uri
-        cameraLauncher.launch(uri)
+        val permission = android.Manifest.permission.CAMERA
+        if (context.checkSelfPermission(permission) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            val tempFile = File(context.cacheDir, "camera_${System.currentTimeMillis()}.jpg")
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", tempFile)
+            cameraUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            pendingCameraLaunch = true
+            cameraPermissionLauncher.launch(permission)
+        }
     }
 
     if (showCameraDialog) {

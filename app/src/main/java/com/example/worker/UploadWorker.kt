@@ -7,7 +7,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
-import android.provider.OpenableColumns
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -31,6 +30,8 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Date
+import androidx.core.graphics.scale
+import androidx.core.net.toUri
 
 class UploadWorker(
     private val appContext: Context,
@@ -54,7 +55,7 @@ class UploadWorker(
         uriStrings.forEachIndexed { index, uriString ->
             setForeground(createForegroundInfo(index, uriStrings.size))
             try {
-                val uri = Uri.parse(uriString)
+                val uri = uriString.toUri()
                 val file = compressImage(uri, appContext)
                 if (file != null) {
                     val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
@@ -101,7 +102,7 @@ class UploadWorker(
             .setProgress(total, progress, false)
             .build()
         
-        return if (Build.VERSION.SDK_INT >= Build.VERSION.SDK_CODES.Q) { // FOREGROUND_SERVICE_DATA_SYNC starts in Q, required in 14
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
              ForegroundInfo(1, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         } else {
              ForegroundInfo(1, notification)
@@ -109,17 +110,15 @@ class UploadWorker(
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION.SDK_CODES.O) {
-            val name = "Uploads"
-            val descriptionText = "Image Uploads"
-            val importance = NotificationManager.IMPORTANCE_LOW
-            val channel = NotificationChannel("upload_channel", name, importance).apply {
-                description = descriptionText
-            }
-            val notificationManager: NotificationManager =
-                appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+        val name = "Uploads"
+        val descriptionText = "Image Uploads"
+        val importance = NotificationManager.IMPORTANCE_LOW
+        val channel = NotificationChannel("upload_channel", name, importance).apply {
+            description = descriptionText
         }
+        val notificationManager: NotificationManager =
+            appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
     }
 
     private fun initFirebase(context: Context) {
@@ -154,11 +153,11 @@ class UploadWorker(
             if (bitmap == null) return null
 
             val maxPixel = 1200f
-            val ratio = Math.min(maxPixel / bitmap.width, maxPixel / bitmap.height)
+            val ratio = (maxPixel / bitmap.width).coerceAtMost(maxPixel / bitmap.height)
             val finalWidth = if (ratio < 1) (bitmap.width * ratio).toInt() else bitmap.width
             val finalHeight = if (ratio < 1) (bitmap.height * ratio).toInt() else bitmap.height
 
-            val resizedBitmap = Bitmap.createScaledBitmap(bitmap, finalWidth, finalHeight, true)
+            val resizedBitmap = bitmap.scale(finalWidth, finalHeight)
 
             val outputStream = ByteArrayOutputStream()
             resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 75, outputStream)
