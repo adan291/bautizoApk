@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Liam 📸</string>
+    <string name="upload_photos">Încarcă Fotografii</string>
+    <string name="uploading">Se încarcă...</string>
+    <string name="header_title">Fotografii de la Botez</string>
+    <string name="share_subtitle">Împărtășește fotografiile tale din ziua aceea</string>
+    <string name="empty_title">Nu sunt fotografii încă. Fii primul care încarcă!</string>
+    <string name="photo_uploaded">Fotografie încărcată!</string>
+    <string name="photo_uploaded_multiple">Fotografii încărcate!</string>
+    <string name="background_uploading">Încărcare fotografii în fundal...</string>
+    <string name="error">Eroare</string>
+</resources>

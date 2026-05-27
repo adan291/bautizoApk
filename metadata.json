@@ -1,0 +1,10 @@
+{
+  "name": "Liam 📸",
+  "description": "Galería de fotos para el bautizo de Liam",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

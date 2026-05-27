@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Liam 📸</string>
+    <string name="upload_photos">Subir Fotos</string>
+    <string name="uploading">Subiendo...</string>
+    <string name="header_title">Fotos del Bautizo</string>
+    <string name="share_subtitle">Comparte tus fotos del día</string>
+    <string name="empty_title">Aún no hay fotos. ¡Sé el primero en subir!</string>
+    <string name="photo_uploaded">¡Foto subida!</string>
+    <string name="photo_uploaded_multiple">¡Fotos subidas!</string>
+    <string name="background_uploading">Subiendo fotos en segundo plano...</string>
+    <string name="error">Error</string>
+</resources>
