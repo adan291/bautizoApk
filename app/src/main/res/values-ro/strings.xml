@@ -2,12 +2,23 @@
 <resources>
     <string name="app_name">Liam 📸</string>
     <string name="upload_photos">Încarcă Fotografii</string>
-    <string name="uploading">Se încarcă...</string>
+    <string name="uploading">Se încarcă…</string>
     <string name="header_title">Fotografii de la Botez</string>
     <string name="share_subtitle">Împărtășește fotografiile tale din ziua aceea</string>
-    <string name="empty_title">Nu sunt fotografii încă. Fii primul care încarcă!</string>
+    <string name="empty_title">Nu sunt fotografii încă.\nFii primul care încarcă!</string>
     <string name="photo_uploaded">Fotografie încărcată!</string>
     <string name="photo_uploaded_multiple">Fotografii încărcate!</string>
-    <string name="background_uploading">Încărcare fotografii în fundal...</string>
+    <string name="background_uploading">Încărcare fotografii în fundal…</string>
     <string name="error">Eroare</string>
+    <string name="photo_count">%d fotografii</string>
+    <string name="photo_count_one">1 fotografie</string>
+    <string name="download">Salvează fotografia</string>
+    <string name="download_success">Fotografie salvată în galerie</string>
+    <string name="download_error">Eroare la salvare</string>
+    <string name="camera">Cameră</string>
+    <string name="gallery">Galerie</string>
+    <string name="lang_es">ES</string>
+    <string name="lang_ro">RO</string>
+    <string name="splash_title">Botezul lui Liam</string>
+    <string name="splash_date">14 Iunie 2026</string>
 </resources>

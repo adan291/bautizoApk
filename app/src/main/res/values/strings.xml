@@ -1,12 +1,23 @@
 <resources>
     <string name="app_name">Liam 📸</string>
     <string name="upload_photos">Subir Fotos</string>
-    <string name="uploading">Subiendo...</string>
+    <string name="uploading">Subiendo…</string>
     <string name="header_title">Fotos del Bautizo</string>
     <string name="share_subtitle">Comparte tus fotos del día</string>
-    <string name="empty_title">Aún no hay fotos. ¡Sé el primero en subir!</string>
+    <string name="empty_title">Aún no hay fotos.\n¡Sé el primero en subir!</string>
     <string name="photo_uploaded">¡Foto subida!</string>
     <string name="photo_uploaded_multiple">¡Fotos subidas!</string>
-    <string name="background_uploading">Subiendo fotos en segundo plano...</string>
+    <string name="background_uploading">Subiendo fotos en segundo plano…</string>
     <string name="error">Error</string>
+    <string name="photo_count">%d fotos</string>
+    <string name="photo_count_one">1 foto</string>
+    <string name="download">Guardar foto</string>
+    <string name="download_success">Foto guardada en galería</string>
+    <string name="download_error">Error al guardar</string>
+    <string name="camera">Cámara</string>
+    <string name="gallery">Galería</string>
+    <string name="lang_es">ES</string>
+    <string name="lang_ro">RO</string>
+    <string name="splash_title">Bautizo de Liam</string>
+    <string name="splash_date">14 de Junio de 2026</string>
 </resources>
