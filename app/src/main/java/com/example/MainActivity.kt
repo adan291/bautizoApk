@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -76,24 +78,50 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppContent() {
     var showSplash by remember { mutableStateOf(true) }
+    var locale by rememberSaveable { mutableStateOf(Locale.getDefault().language.let { if (it == "ro") "ro" else "es" }) }
 
     LaunchedEffect(Unit) {
         delay(2000)
         showSplash = false
     }
 
-    AnimatedVisibility(
-        visible = showSplash,
-        exit = fadeOut(animationSpec = tween(400))
-    ) {
-        SplashScreen()
+    LocalizedContent(locale = locale) {
+        AnimatedVisibility(
+            visible = showSplash,
+            exit = fadeOut(animationSpec = tween(400))
+        ) {
+            SplashScreen()
+        }
+
+        AnimatedVisibility(
+            visible = !showSplash,
+            enter = fadeIn(animationSpec = tween(400))
+        ) {
+            GalleryApp(
+                currentLocale = locale,
+                onLocaleChange = { locale = it }
+            )
+        }
+    }
+}
+
+@Composable
+fun LocalizedContent(locale: String, content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val localizedContext = remember(locale) {
+        val config = Configuration(context.resources.configuration)
+        config.setLocale(Locale(locale))
+        context.createConfigurationContext(config)
+    }
+    val configuration = remember(locale) {
+        Configuration(context.resources.configuration).apply { setLocale(Locale(locale)) }
     }
 
-    AnimatedVisibility(
-        visible = !showSplash,
-        enter = fadeIn(animationSpec = tween(400))
+    CompositionLocalProvider(
+        LocalContext provides localizedContext,
+        LocalConfiguration provides configuration
     ) {
-        GalleryApp()
+        content()
     }
 }
 
@@ -145,14 +173,17 @@ fun SplashScreen() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GalleryApp(viewModel: GalleryViewModel = viewModel()) {
+fun GalleryApp(
+    currentLocale: String,
+    onLocaleChange: (String) -> Unit,
+    viewModel: GalleryViewModel = viewModel()
+) {
     val photos by viewModel.photos.collectAsStateWithLifecycle()
     val uploadError by viewModel.uploadError.collectAsStateWithLifecycle()
 
     var selectedImageIndex by remember { mutableStateOf<Int?>(null) }
     var showCameraDialog by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
-    var currentLocale by remember { mutableStateOf(Locale.getDefault().language) }
 
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -199,15 +230,6 @@ fun GalleryApp(viewModel: GalleryViewModel = viewModel()) {
             pendingCameraLaunch = true
             cameraPermissionLauncher.launch(permission)
         }
-    }
-
-    fun switchLocale(lang: String) {
-        currentLocale = lang
-        val locale = Locale(lang)
-        Locale.setDefault(locale)
-        val config = Configuration(context.resources.configuration)
-        config.setLocale(locale)
-        context.resources.updateConfiguration(config, context.resources.displayMetrics)
     }
 
     LaunchedEffect(uploadError) {
@@ -283,12 +305,12 @@ fun GalleryApp(viewModel: GalleryViewModel = viewModel()) {
                         LanguageChip(
                             text = "ES",
                             selected = currentLocale == "es",
-                            onClick = { switchLocale("es") }
+                            onClick = { onLocaleChange("es") }
                         )
                         LanguageChip(
                             text = "RO",
                             selected = currentLocale == "ro",
-                            onClick = { switchLocale("ro") }
+                            onClick = { onLocaleChange("ro") }
                         )
                     }
                 },
