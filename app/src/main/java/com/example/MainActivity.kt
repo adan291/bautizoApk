@@ -40,7 +40,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -59,11 +58,30 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.app.Activity
+import android.content.Context
 import java.io.File
 import java.net.URL
 import java.util.Locale
 
+object LocaleHelper {
+    fun wrap(base: Context): Context {
+        val prefs = base.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val lang = prefs.getString("locale", null)
+            ?: if (Locale.getDefault().language == "ro") "ro" else "es"
+        val locale = Locale(lang)
+        Locale.setDefault(locale)
+        val config = Configuration(base.resources.configuration)
+        config.setLocale(locale)
+        return base.createConfigurationContext(config)
+    }
+}
+
 class MainActivity : ComponentActivity() {
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocaleHelper.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -73,55 +91,37 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    companion object {
+        // Survives activity recreation (same process) so the splash only shows once
+        var splashShown = false
+    }
 }
 
 @Composable
 fun AppContent() {
-    var showSplash by remember { mutableStateOf(true) }
-    var locale by rememberSaveable { mutableStateOf(Locale.getDefault().language.let { if (it == "ro") "ro" else "es" }) }
+    var showSplash by remember { mutableStateOf(!MainActivity.splashShown) }
 
     LaunchedEffect(Unit) {
-        delay(2000)
-        showSplash = false
-    }
-
-    LocalizedContent(locale = locale) {
-        AnimatedVisibility(
-            visible = showSplash,
-            exit = fadeOut(animationSpec = tween(400))
-        ) {
-            SplashScreen()
-        }
-
-        AnimatedVisibility(
-            visible = !showSplash,
-            enter = fadeIn(animationSpec = tween(400))
-        ) {
-            GalleryApp(
-                currentLocale = locale,
-                onLocaleChange = { locale = it }
-            )
+        if (showSplash) {
+            delay(2000)
+            MainActivity.splashShown = true
+            showSplash = false
         }
     }
-}
 
-@Composable
-fun LocalizedContent(locale: String, content: @Composable () -> Unit) {
-    val context = LocalContext.current
-    val localizedContext = remember(locale) {
-        val config = Configuration(context.resources.configuration)
-        config.setLocale(Locale(locale))
-        context.createConfigurationContext(config)
-    }
-    val configuration = remember(locale) {
-        Configuration(context.resources.configuration).apply { setLocale(Locale(locale)) }
-    }
-
-    CompositionLocalProvider(
-        LocalContext provides localizedContext,
-        LocalConfiguration provides configuration
+    AnimatedVisibility(
+        visible = showSplash,
+        exit = fadeOut(animationSpec = tween(400))
     ) {
-        content()
+        SplashScreen()
+    }
+
+    AnimatedVisibility(
+        visible = !showSplash,
+        enter = fadeIn(animationSpec = tween(400))
+    ) {
+        GalleryApp()
     }
 }
 
@@ -173,11 +173,7 @@ fun SplashScreen() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GalleryApp(
-    currentLocale: String,
-    onLocaleChange: (String) -> Unit,
-    viewModel: GalleryViewModel = viewModel()
-) {
+fun GalleryApp(viewModel: GalleryViewModel = viewModel()) {
     val photos by viewModel.photos.collectAsStateWithLifecycle()
     val uploadError by viewModel.uploadError.collectAsStateWithLifecycle()
 
@@ -190,6 +186,15 @@ fun GalleryApp(
     val scope = rememberCoroutineScope()
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
     var pendingCameraLaunch by remember { mutableStateOf(false) }
+
+    val currentLocale = context.resources.configuration.locales[0].language
+
+    fun changeLocale(lang: String) {
+        if (lang == currentLocale) return
+        context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+            .edit().putString("locale", lang).apply()
+        (context as? Activity)?.recreate()
+    }
 
     val pickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         if (uris.isNotEmpty()) {
@@ -305,12 +310,12 @@ fun GalleryApp(
                         LanguageChip(
                             text = "ES",
                             selected = currentLocale == "es",
-                            onClick = { onLocaleChange("es") }
+                            onClick = { changeLocale("es") }
                         )
                         LanguageChip(
                             text = "RO",
                             selected = currentLocale == "ro",
-                            onClick = { onLocaleChange("ro") }
+                            onClick = { changeLocale("ro") }
                         )
                     }
                 },
